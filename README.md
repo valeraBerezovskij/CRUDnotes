@@ -9,4 +9,5 @@ NoteApp — это простое приложение для создания, 
 ```bash
 git clone https://github.com/valeraninja/noteapp.git
 cd noteapp
-
+```
+написал chatGPT, мне лень писать
