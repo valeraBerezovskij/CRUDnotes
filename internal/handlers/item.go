@@ -10,23 +10,24 @@ import (
 func (h *Handler) createItem(c *gin.Context) {
 	var note models.Note
 
-	if err := c.BindJSON(&note); err != nil{
+	if err := c.BindJSON(&note); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	id, err := h.service.NoteItem.CreateItem(note)
-	if err != nil{
+	id, err := h.noteService.CreateItem(note)
+	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": id,
 	})
 }
 
 func (h *Handler) getAllItems(c *gin.Context) {
-	notes, err := h.service.NoteItem.GetAllItems()
+	notes, err := h.noteService.GetAllItems()
 	if err != nil{
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -43,7 +44,7 @@ func (h *Handler) getItemById(c *gin.Context) {
 		return
 	}
 
-	note, err := h.service.NoteItem.GetItemById(idInt)
+	note, err := h.noteService.GetItemById(idInt)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -68,7 +69,7 @@ func (h *Handler) updateItem(c *gin.Context) {
 		return
 	}
 
-	err = h.service.NoteItem.UpdateItem(idInt, note)
+	err = h.noteService.UpdateItem(idInt, note)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -87,7 +88,7 @@ func (h *Handler) deleteItem(c *gin.Context) {
 		return
 	}
 
-	err = h.service.NoteItem.DeleteItem(idInt)
+	err = h.noteService.DeleteItem(idInt)
 	if err != nil{
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

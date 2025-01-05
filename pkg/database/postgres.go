@@ -1,4 +1,4 @@
-package repository
+package database
 
 import (
 	"database/sql"
@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	noteTable = "notes"
-) 
+	NoteTable = "notes"
+)
 
 type Config struct {
 	Host     string

@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"valeraninja/noteapp/internal/handlers"
 	"valeraninja/noteapp/internal/repository"
 	"valeraninja/noteapp/internal/server"
 	"valeraninja/noteapp/internal/services"
+	"valeraninja/noteapp/pkg/database"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -24,7 +26,7 @@ func main() {
 		logrus.Fatalf("error loading env file: %s", err.Error())
 	}
 
-	db, err := repository.NewPostgresDB(repository.Config{
+	db, err := database.NewPostgresDB(database.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
 		Username: viper.GetString("db.username"),
@@ -39,7 +41,7 @@ func main() {
 
 	repos := repository.NewRepository(db)
 	services := services.NewService(repos)
-	handlers := handlers.NewHandler(services)
+	handlers := handlers.NewHandler(services.NoteItem)
 
 	srv := new(server.Server)
 	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {

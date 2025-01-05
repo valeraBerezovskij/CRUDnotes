@@ -1,17 +1,24 @@
 package handlers
 
 import (
-	"valeraninja/noteapp/internal/services"
-
+	"valeraninja/noteapp/internal/models"
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
-	service *services.Service
+type NoteItem interface {
+	CreateItem(note models.Note) (int, error)
+	GetAllItems() ([]models.Note, error)
+	GetItemById(id int) (models.Note, error)
+	DeleteItem(id int) error
+	UpdateItem(id int, note models.Note) error
 }
 
-func NewHandler(services *services.Service) *Handler {
-	return &Handler{service: services}
+type Handler struct {
+	noteService NoteItem
+}
+
+func NewHandler(noteService NoteItem) *Handler {
+	return &Handler{noteService: noteService}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {

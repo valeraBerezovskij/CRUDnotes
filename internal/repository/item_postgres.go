@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"valeraninja/noteapp/internal/models"
+	"valeraninja/noteapp/pkg/database"
 )
 
 type ItemPostgres struct {
@@ -16,7 +17,7 @@ func NewItemPostgres(db *sql.DB) *ItemPostgres {
 
 func (r *ItemPostgres) CreateItem(note models.Note) (int, error) {
 	var id int
-	query := fmt.Sprintf("insert into %s(title, description) values($1, $2) RETURNING id", noteTable)
+	query := fmt.Sprintf("insert into %s(title, description) values($1, $2) RETURNING id", database.NoteTable)
 	row := r.db.QueryRow(query, note.Title, note.Description)
 	if err := row.Scan(&id); err != nil{
 		return 0, nil
@@ -27,7 +28,7 @@ func (r *ItemPostgres) CreateItem(note models.Note) (int, error) {
 func (r *ItemPostgres) GetAllItems() ([]models.Note, error){
 	notes := make([]models.Note, 0)
 
-	query := fmt.Sprintf("select * from %s", noteTable)
+	query := fmt.Sprintf("select * from %s", database.NoteTable)
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func (r *ItemPostgres) GetAllItems() ([]models.Note, error){
 
 func (r *ItemPostgres) GetItemById(id int) (models.Note, error){
 	var note models.Note
-	query := fmt.Sprintf("select * from %s where id = $1", noteTable)
+	query := fmt.Sprintf("select * from %s where id = $1", database.NoteTable)
 	row := r.db.QueryRow(query, id)
 	if err := row.Scan(&note.ID, &note.Title, &note.Description, &note.CreatedAt); err != nil{
 		return models.Note{}, err
@@ -56,7 +57,7 @@ func (r *ItemPostgres) GetItemById(id int) (models.Note, error){
 }
 
 func (r *ItemPostgres) UpdateItem(id int, note models.Note) error{
-	query := fmt.Sprintf("UPDATE %s SET %s = $1, %s = $2 WHERE id = $3", noteTable, "title", "description")
+	query := fmt.Sprintf("UPDATE %s SET %s = $1, %s = $2 WHERE id = $3", database.NoteTable, "title", "description")
 	result, err := r.db.Exec(query, note.Title, note.Description, note.ID)
 	if err != nil{
 		return err
@@ -74,7 +75,7 @@ func (r *ItemPostgres) UpdateItem(id int, note models.Note) error{
 }
 
 func (r *ItemPostgres) DeleteItem(id int) error{
-	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", noteTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", database.NoteTable)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
