@@ -3,16 +3,24 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"time"
 	"valeraninja/noteapp/internal/models"
 	"valeraninja/noteapp/pkg/database"
+
+	"github.com/patrickmn/go-cache"
+	"github.com/sirupsen/logrus"
 )
 
 type ItemPostgres struct {
-	db *sql.DB
+	db    *sql.DB
+	cache *cache.Cache
 }
 
 func NewItemPostgres(db *sql.DB) *ItemPostgres {
-	return &ItemPostgres{db: db}
+	return &ItemPostgres{
+		db:    db,
+		cache: cache.New(5*time.Minute, 10*time.Minute),
+	}
 }
 
 func (r *ItemPostgres) CreateItem(note models.Note) (int, error) {
@@ -22,12 +30,17 @@ func (r *ItemPostgres) CreateItem(note models.Note) (int, error) {
 	if err := row.Scan(&id); err != nil {
 		return 0, nil
 	}
+	r.cache.Delete("GetAllItems")
 	return id, nil
 }
 
 func (r *ItemPostgres) GetAllItems() ([]models.Note, error) {
-	notes := make([]models.Note, 0)
+	if cached, found := r.cache.Get("GetAllItems"); found {
+		logrus.Infoln("cache get all items")
+		return cached.([]models.Note), nil
+	}
 
+	notes := make([]models.Note, 0)
 	query := fmt.Sprintf("select * from %s", database.NoteTable)
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -43,16 +56,26 @@ func (r *ItemPostgres) GetAllItems() ([]models.Note, error) {
 		notes = append(notes, note)
 	}
 
+	r.cache.Set("GetAllItems", notes, cache.DefaultExpiration)
 	return notes, nil
 }
 
 func (r *ItemPostgres) GetItemById(id int) (models.Note, error) {
+	cacheKey := fmt.Sprintf("GetItemById:%d", id)
+	if cached, found := r.cache.Get(cacheKey); found {
+		logrus.Infoln("cache GetItemById")
+		return cached.(models.Note), nil
+	}
+
 	var note models.Note
 	query := fmt.Sprintf("select * from %s where id = $1", database.NoteTable)
 	row := r.db.QueryRow(query, id)
 	if err := row.Scan(&note.ID, &note.Title, &note.Description, &note.CreatedAt); err != nil {
 		return models.Note{}, err
 	}
+
+	r.cache.Set(cacheKey, note, cache.DefaultExpiration)
+
 	return note, nil
 }
 
@@ -71,6 +94,9 @@ func (r *ItemPostgres) UpdateItem(id int, note models.Note) error {
 	if rowsAffected == 0 {
 		return fmt.Errorf("record not found")
 	}
+
+	r.cache.Delete(fmt.Sprintf("GetItemById:%d", id))
+	r.cache.Delete("GetAllItems")
 	return nil
 }
 
@@ -90,5 +116,9 @@ func (r *ItemPostgres) DeleteItem(id int) error {
 	if rowsAffected == 0 {
 		return fmt.Errorf("record not found")
 	}
+
+	r.cache.Delete(fmt.Sprintf("GetItemById:%d", id))
+	r.cache.Delete("GetAllItems")
+
 	return nil
 }

@@ -34,7 +34,7 @@ func main() {
 
 	db, err := database.NewPostgresDB(database.Config{
 		Host:     os.Getenv("DB_HOST"),
-		Port:     viper.GetString("db.port"),
+		Port:     os.Getenv("DB_PORT"),
 		Username: os.Getenv("DB_USERNAME"),
 		DBName:   os.Getenv("DB_NAME"),
 		SSLMode:  os.Getenv("DB_SSLMODE"),
