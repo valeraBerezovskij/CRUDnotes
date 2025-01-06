@@ -12,12 +12,18 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-
 	"github.com/spf13/viper"
 )
 
+// @title CRUD APP
+// @version 1.1
+// @description CRUD application for notes
+
+// @host localhost:8000
+// @BasePath /
 func main() {
-	logrus.SetFormatter(new(logrus.JSONFormatter))
+	initLogger()
+
 	if err := initConfig(); err != nil {
 		logrus.Fatalf("error initializing configs: %s", err.Error())
 	}
@@ -27,11 +33,11 @@ func main() {
 	}
 
 	db, err := database.NewPostgresDB(database.Config{
-		Host:     viper.GetString("db.host"),
+		Host:     os.Getenv("DB_HOST"),
 		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
+		Username: os.Getenv("DB_USERNAME"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
 		Password: os.Getenv("DB_PASSWORD"),
 	})
 
@@ -47,6 +53,12 @@ func main() {
 	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
 		logrus.Fatalf("error occured while running http server: %s", err.Error())
 	}
+}
+
+func initLogger() {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+	logrus.SetOutput(os.Stdout)
+	logrus.SetLevel(logrus.InfoLevel)
 }
 
 func initConfig() error {

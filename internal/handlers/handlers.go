@@ -1,8 +1,11 @@
 package handlers
 
 import (
-	"valeraninja/noteapp/internal/models"
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+	_ "valeraninja/noteapp/docs"
+	"valeraninja/noteapp/internal/models"
 )
 
 type NoteItem interface {
@@ -23,6 +26,8 @@ func NewHandler(noteService NoteItem) *Handler {
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := router.Group("/api")
 	{

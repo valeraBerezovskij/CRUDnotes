@@ -1,8 +1,1 @@
-port: 8001
-
-db:
-    host: 'localhost'
-    port: '5432'
-    username: 'user'
-    dbname: 'my_database'
-    sslmode: 'disable'
+port: 8000
